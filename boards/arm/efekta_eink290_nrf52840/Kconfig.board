@@ -1,0 +1,6 @@
+# Copyright (c) 2021 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_EFEKTA_EINK290_NRF52840
+	bool "EFEKTA EINK290 nRF52840"
+	depends on SOC_NRF52840_QIAA

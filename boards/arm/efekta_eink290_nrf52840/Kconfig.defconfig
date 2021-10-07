@@ -1,0 +1,12 @@
+# Copyright (c) 2021 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_EFEKTA_EINK290_NRF52840
+
+config BOARD
+	default "efekta_eink290_nrf52840"
+
+config BT_CTLR
+   default BT
+
+endif
