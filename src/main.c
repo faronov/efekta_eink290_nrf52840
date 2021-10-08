@@ -78,7 +78,7 @@ LOG_MODULE_REGISTER(app);
  * Stores all settings and static values.
  */
 struct zb_device_ctx {
-	zb_zcl_basic_attrs_t     basic_attr;
+	zb_zcl_basic_attrs_ext_t     basic_attr;
 	zb_zcl_identify_attrs_t  identify_attr;
 	zb_zcl_power_config_attrs_t power_config_attr;
 	zb_zcl_temp_measurement_attrs_t temperature_measure_attr;
@@ -94,10 +94,19 @@ ZB_ZCL_DECLARE_IDENTIFY_ATTRIB_LIST(
 	identify_attr_list,
 	&dev_ctx.identify_attr.identify_time);
 
-ZB_ZCL_DECLARE_BASIC_ATTRIB_LIST(
+ZB_ZCL_DECLARE_BASIC_ATTRIB_LIST_EXT(
 	basic_attr_list,
 	&dev_ctx.basic_attr.zcl_version,
-	&dev_ctx.basic_attr.power_source);
+	&dev_ctx.basic_attr.app_version,
+	&dev_ctx.basic_attr.stack_version,
+	&dev_ctx.basic_attr.hw_version,
+	dev_ctx.basic_attr.mf_name,
+	dev_ctx.basic_attr.model_id,
+	dev_ctx.basic_attr.date_code,
+	&dev_ctx.basic_attr.power_source,
+	dev_ctx.basic_attr.location_id,
+	&dev_ctx.basic_attr.ph_env,
+	dev_ctx.basic_attr.sw_ver);
 
 ZB_HA_DECLARE_RANGE_EXTENDER_CLUSTER_LIST(
 	sensor_clusters,

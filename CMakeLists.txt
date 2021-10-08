@@ -11,9 +11,6 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project("Zigbee EFEKTA EINK290 NRF52840")
 
-#zephyr_library()
-#zephyr_library_sources(bme280.c bme280_spi.c bme280_i2c.c uart_console.c)
-
 # NORDIC SDK APP START
 target_include_directories(app PRIVATE include)
 target_sources(app PRIVATE
