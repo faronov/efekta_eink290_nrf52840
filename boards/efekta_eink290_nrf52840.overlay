@@ -16,7 +16,14 @@
 &gpio1 {
 	status = "disabled";
 };
+
+&uart0 {
+	compatible = "nordic,nrf-uart";
+	status = "disabled";
+};
+
 &uart1 {
+	compatible = "nordic,nrf-uarte";
 	status = "disabled";
 };
 
@@ -39,6 +46,7 @@
 	  label = "BME280_I2C";
 	 };
 };
+
 &spi0 {
 	compatible = "nordic,nrf-spi";
 	/* Cannot be used together with i2c0. */
