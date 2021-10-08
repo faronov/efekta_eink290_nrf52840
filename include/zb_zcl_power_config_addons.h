@@ -1,13 +1,3 @@
-/** @brief Declare attribute list for Power Configuration cluster - server side
-    @param attr_list - attribute list name
-    @param voltage - pointer to variable to store BatteryVoltage attribute
-    @param size - pointer to variable to store BatterySize attribute
-    @param quantity - pointer to variable to store BatteryQuantity attribute
-    @param rated_voltage - pointer to variable to store BatteryRatedVoltage attribute
-    @param alarm_mask - pointer to variable to store BatteryAlarmMask attribute
-    @param voltage_min_threshold - pointer to variable to store BatteryVoltageMinThreshold attribute
-*/
-
 /*
  * Copyright (c) 2020 Nordic Semiconductor ASA
  *

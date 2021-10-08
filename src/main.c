@@ -108,6 +108,42 @@ ZB_ZCL_DECLARE_BASIC_ATTRIB_LIST_EXT(
 	&dev_ctx.basic_attr.ph_env,
 	dev_ctx.basic_attr.sw_ver);
 
+ZB_ZCL_DECLARE_POWER_CONFIG_ATTRIB_LIST(
+	power_config_attr_list,
+	&dev_ctx.power_config_attr.battery_voltage,
+	&dev_ctx.power_config_attr.battery_size,
+	&dev_ctx.power_config_attr.battery_quantity,
+	&dev_ctx.power_config_attr.battery_rated_voltage,
+	&dev_ctx.power_config_attr.battery_alarm_mask,
+	&dev_ctx.power_config_attr.battery_voltage_min_threshold);
+
+ZB_ZCL_DECLARE_TEMP_MEASUREMENT_ATTRIB_LIST(
+	temperature_measure_attr_list,
+	&dev_ctx.temperature_measure_attr.measure_value,
+	&dev_ctx.temperature_measure_attr.min_measure_value,
+	&dev_ctx.temperature_measure_attr.max_measure_value,
+	&dev_ctx.temperature_measure_attr.tolerance);
+
+ZB_ZCL_DECLARE_REL_HUMIDITY_MEASUREMENT_ATTRIB_LIST(
+	real_humidity_measure_attr_list,
+	&dev_ctx.real_humidity_measure_attr.measure_value,
+	&dev_ctx.real_humidity_measure_attr.min_measure_value,
+	&dev_ctx.real_humidity_measure_attr.max_measure_value);
+
+ZB_ZCL_DECLARE_ILLUMINANCE_MEASUREMENT_ATTRIB_LIST(
+	illuminance_measure_attr_list,
+	&dev_ctx.illuminance_measure_attr.measure_value,
+	&dev_ctx.illuminance_measure_attr.min_measure_value,
+	&dev_ctx.illuminance_measure_attr.max_measure_value);
+
+ZB_ZCL_DECLARE_PRESSURE_MEASUREMENT_ATTRIB_LIST(
+	pressure_measure_attr_list,
+	&dev_ctx.pressure_measure_attr.measure_value,
+	&dev_ctx.pressure_measure_attr.min_measure_value,
+	&dev_ctx.pressure_measure_attr.max_measure_value,
+	&dev_ctx.pressure_measure_attr.tolerance);
+
+
 ZB_HA_DECLARE_RANGE_EXTENDER_CLUSTER_LIST(
 	sensor_clusters,
 	identify_attr_list,

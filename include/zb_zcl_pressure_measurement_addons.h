@@ -18,6 +18,7 @@ typedef struct
     zb_int16_t  measure_value;
     zb_int16_t  min_measure_value;
     zb_int16_t  max_measure_value;
+    zb_uint16_t  tolerance;
 } zb_zcl_pressure_measurement_attrs_t;
 
 /** @} */
