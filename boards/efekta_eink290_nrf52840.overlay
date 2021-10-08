@@ -20,7 +20,7 @@
 	status = "disabled";
 };
 
-&i2c0 {
+&i2c1 {
 
 	compatible = "nordic,nrf-twi";
 	 status = "okay";
