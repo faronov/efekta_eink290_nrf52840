@@ -22,6 +22,9 @@
 #include "zb_zcl_illuminance_measurement_addons.h"
 #include "zb_zcl_pressure_measurement_addons.h"
 #include "zb_zcl_power_config_addons.h"
+#include "zb_weather_sensor.h"
+
+#define ZB_HA_DEFINE_DEVICE_WEATHER_SENSOR
 
 /* Device endpoint, used to receive ZCL commands. */
 #define SENSOR_ENDPOINT           1
@@ -142,7 +145,6 @@ ZB_ZCL_DECLARE_PRESSURE_MEASUREMENT_ATTRIB_LIST(
 	&dev_ctx.pressure_measure_attr.min_measure_value,
 	&dev_ctx.pressure_measure_attr.max_measure_value,
 	&dev_ctx.pressure_measure_attr.tolerance);
-
 
 ZB_HA_DECLARE_RANGE_EXTENDER_CLUSTER_LIST(
 	sensor_clusters,
