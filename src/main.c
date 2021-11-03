@@ -22,58 +22,26 @@
 #include "zb_zcl_illuminance_measurement_addons.h"
 #include "zb_zcl_pressure_measurement_addons.h"
 #include "zb_zcl_power_config_addons.h"
-#include "zb_weather_sensor.h"
+#include "zb_multi_sensor.h"
 
-#define ZB_HA_DEFINE_DEVICE_WEATHER_SENSOR
-
-/* Device endpoint, used to receive ZCL commands. */
-#define SENSOR_ENDPOINT           1
-
-/* Version of the application software (1 byte). */
-#define SENSOR_INIT_BASIC_APP_VERSION     01
-
-/* Version of the implementation of the Zigbee stack (1 byte). */
-#define SENSOR_INIT_BASIC_STACK_VERSION   10
-
-/* Version of the hardware of the device (1 byte). */
-#define SENSOR_INIT_BASIC_HW_VERSION      02
-
-/* Manufacturer name (32 bytes). */
-#define SENSOR_INIT_BASIC_MANUF_NAME      "Nordic"
-
-/* Model number assigned by manufacturer (32-bytes long string). */
-#define SENSOR_INIT_BASIC_MODEL_ID        "Efekta_EINK290"
-
-/* First 8 bytes specify the date of manufacturer of the device
- * in ISO 8601 format (YYYYMMDD). The rest (8 bytes) are manufacturer specific.
- */
-#define  SENSOR_INIT_BASIC_DATE_CODE       "20211005"
-
-/* Type of power sources available for the device.
- * For possible values see section 3.2.2.2.8 of ZCL specification.
- */
-#define SENSOR_INIT_BASIC_POWER_SOURCE    ZB_ZCL_BASIC_POWER_SOURCE_BATTERY
-
-/* Describes the physical location of the device (16 bytes).
- * May be modified during commisioning process.
- */
-#define SENSOR_INIT_BASIC_LOCATION_DESC   "Office desk"
-
-/* Describes the type of physical environment.
- * For possible values see section 3.2.2.2.10 of ZCL specification.
- */
-#define SENSOR_INIT_BASIC_PH_ENV          ZB_ZCL_BASIC_ENV_UNSPECIFIED
+#define ZB_HA_DEFINE_DEVICE_MULTI_SENSOR
 
 
-/* LED indicating that device successfully joined Zigbee network. */
-#define ZIGBEE_NETWORK_STATE_LED        DK_LED3
-
-/* LED used for device identification. */
-#define IDENTIFY_LED                    DK_LED4
-
-/* Button used to enter the Identify mode. */
-#define IDENTIFY_MODE_BUTTON            DK_BTN4_MSK
-
+#define MULTI_SENSOR_ENDPOINT      		  1 /* Device endpoint, used to receive ZCL commands. */
+#define SENSOR_INIT_BASIC_APP_VERSION     01 /* Version of the application software (1 byte). */
+#define SENSOR_INIT_BASIC_STACK_VERSION   10 /* Version of the implementation of the Zigbee stack (1 byte). */
+#define SENSOR_INIT_BASIC_HW_VERSION      02 /* Version of the hardware of the device (1 byte). */
+#define SENSOR_INIT_BASIC_MANUF_NAME      "Nordic" /* Manufacturer name (32 bytes). */
+#define SENSOR_INIT_BASIC_MODEL_ID        "Efekta_EINK290" /* Model number assigned by manufacturer (32-bytes long string). */
+#define SENSOR_INIT_BASIC_DATE_CODE       "20211005" /* First 8 bytes specify the date of manufacturer of the device in ISO 8601 format (YYYYMMDD). The rest (8 bytes) are manufacturer specific.*/
+#define SENSOR_INIT_BASIC_POWER_SOURCE    ZB_ZCL_BASIC_POWER_SOURCE_BATTERY /* Type of power sources available for the device. For possible values see section 3.2.2.2.8 of ZCL specification.*/
+#define SENSOR_INIT_BASIC_LOCATION_DESC   "Office desk" /* Describes the physical location of the device (16 bytes).May be modified during commisioning process.*/
+#define SENSOR_INIT_BASIC_PH_ENV          ZB_ZCL_BASIC_ENV_UNSPECIFIED /* Describes the type of physical environment. For possible values see section 3.2.2.2.10 of ZCL specification. */
+#define ZIGBEE_NETWORK_STATE_LED          DK_LED3 /* LED indicating that device successfully joined Zigbee network. */
+#define IDENTIFY_LED                      DK_LED4 /* LED used for device identification. */
+#define IDENTIFY_MODE_BUTTON              DK_BTN4_MSK /* Button used to enter the Identify mode. */
+#define ZB_ZCL_POWER_CONFIG_BATTERY_QUANTITY 2
+#define ZB_ZCL_POWER_CONFIG_BATTERY_RATED_VOLTAGE 15
 
 LOG_MODULE_REGISTER(app);
 
@@ -112,7 +80,7 @@ ZB_ZCL_DECLARE_BASIC_ATTRIB_LIST_EXT(
 	dev_ctx.basic_attr.sw_ver);
 
 ZB_ZCL_DECLARE_POWER_CONFIG_ATTRIB_LIST(
-	power_config_attr_list,
+	power_measure_attr_list,
 	&dev_ctx.power_config_attr.battery_voltage,
 	&dev_ctx.power_config_attr.battery_size,
 	&dev_ctx.power_config_attr.battery_quantity,
@@ -146,14 +114,18 @@ ZB_ZCL_DECLARE_PRESSURE_MEASUREMENT_ATTRIB_LIST(
 	&dev_ctx.pressure_measure_attr.max_measure_value,
 	&dev_ctx.pressure_measure_attr.tolerance);
 
-ZB_HA_DECLARE_RANGE_EXTENDER_CLUSTER_LIST(
+ZB_DECLARE_MULTI_SENSOR_CLUSTER_LIST(
 	sensor_clusters,
 	identify_attr_list,
-	basic_attr_list);
+	basic_attr_list,
+	temperature_measure_attr_list,
+	real_humidity_measure_attr_list,
+	pressure_measure_attr_list,
+	power_measure_attr_list);
 
-ZB_HA_DECLARE_RANGE_EXTENDER_EP(
+ZB_ZCL_DECLARE_MULTI_SENSOR_EP(
 	sensor_ep,
-	SENSOR_ENDPOINT,
+	MULTI_SENSOR_ENDPOINT,
 	sensor_clusters);
 
 ZBOSS_DECLARE_DEVICE_CTX_1_EP(
@@ -162,16 +134,74 @@ ZBOSS_DECLARE_DEVICE_CTX_1_EP(
 
 
 /**@brief Function for initializing all clusters attributes. */
-static void app_clusters_attr_init(void)
+static void multi_sensor_clusters_attr_init(void)
 {
-	/* Basic cluster attributes data */
-	dev_ctx.basic_attr.zcl_version = ZB_ZCL_VERSION;
-	dev_ctx.basic_attr.power_source = SENSOR_INIT_BASIC_POWER_SOURCE;
+    /* Basic cluster attributes data */
+    dev_ctx.basic_attr.zcl_version   = ZB_ZCL_VERSION;
+    dev_ctx.basic_attr.app_version   = SENSOR_INIT_BASIC_APP_VERSION;
+    dev_ctx.basic_attr.stack_version = SENSOR_INIT_BASIC_STACK_VERSION;
+    dev_ctx.basic_attr.hw_version    = SENSOR_INIT_BASIC_HW_VERSION;
 
-	/* Identify cluster attributes data. */
-	dev_ctx.identify_attr.identify_time =
-		ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE;
-}
+    /* Use ZB_ZCL_SET_STRING_VAL to set strings, because the first byte should
+     * contain string length without trailing zero.
+     *
+     * For example "test" string wil be encoded as:
+     *   [(0x4), 't', 'e', 's', 't']
+     */
+    ZB_ZCL_SET_STRING_VAL(dev_ctx.basic_attr.mf_name,
+                          SENSOR_INIT_BASIC_MANUF_NAME,
+                          ZB_ZCL_STRING_CONST_SIZE(SENSOR_INIT_BASIC_MANUF_NAME));
+
+    ZB_ZCL_SET_STRING_VAL(dev_ctx.basic_attr.model_id,
+                          SENSOR_INIT_BASIC_MODEL_ID,
+                          ZB_ZCL_STRING_CONST_SIZE(SENSOR_INIT_BASIC_MODEL_ID));
+
+    ZB_ZCL_SET_STRING_VAL(dev_ctx.basic_attr.date_code,
+                          SENSOR_INIT_BASIC_DATE_CODE,
+                          ZB_ZCL_STRING_CONST_SIZE(SENSOR_INIT_BASIC_DATE_CODE));
+
+    dev_ctx.basic_attr.power_source = SENSOR_INIT_BASIC_POWER_SOURCE;
+
+    ZB_ZCL_SET_STRING_VAL(dev_ctx.basic_attr.location_id,
+                          SENSOR_INIT_BASIC_LOCATION_DESC,
+                          ZB_ZCL_STRING_CONST_SIZE(SENSOR_INIT_BASIC_LOCATION_DESC));
+
+
+    dev_ctx.basic_attr.ph_env = SENSOR_INIT_BASIC_PH_ENV;
+
+    /* Identify cluster attributes data */
+    dev_ctx.identify_attr.identify_time        = ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE;
+
+     /* Temperature measurement cluster attributes data */
+    dev_ctx.temperature_measure_attr.measure_value            = ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_UNKNOWN;
+    dev_ctx.temperature_measure_attr.min_measure_value        = ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_MIN_VALUE;
+    dev_ctx.temperature_measure_attr.max_measure_value        = ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_MAX_VALUE;
+    dev_ctx.temperature_measure_attr.tolerance                = ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_MAX_VALUE;
+
+    /* Pressure measurement cluster attributes data */
+    dev_ctx.pressure_measure_attr.measure_value            = ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_UNKNOWN;
+    dev_ctx.pressure_measure_attr.min_measure_value        = ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MIN_VALUE_MIN_VALUE;
+    dev_ctx.pressure_measure_attr.max_measure_value        = ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MAX_VALUE_MAX_VALUE;
+    dev_ctx.pressure_measure_attr.tolerance                = ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_TOLERANCE_MAX_VALUE;
+    
+    /* humidity measurement cluster attributes data */
+    dev_ctx.real_humidity_measure_attr.measure_value            = ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_UNKNOWN;
+    dev_ctx.real_humidity_measure_attr.min_measure_value        = ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_MIN_VALUE;
+    dev_ctx.real_humidity_measure_attr.max_measure_value        = ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_MAX_VALUE;
+
+    /* Voltage measurement cluster attributes data */
+    dev_ctx.power_config_attr.battery_voltage       	= ZB_ZCL_POWER_CONFIG_BATTERY_VOLTAGE_INVALID;
+    dev_ctx.power_config_attr.battery_size        		= ZB_ZCL_POWER_CONFIG_BATTERY_SIZE_AA;
+    dev_ctx.power_config_attr.battery_quantity          = ZB_ZCL_POWER_CONFIG_BATTERY_QUANTITY;
+	dev_ctx.power_config_attr.battery_rated_voltage 	= ZB_ZCL_POWER_CONFIG_BATTERY_RATED_VOLTAGE;
+	dev_ctx.power_config_attr.battery_alarm_mask 		= ZB_ZCL_POWER_CONFIG_BATTERY_ALARM_MASK_DEFAULT_VALUE;
+	dev_ctx.power_config_attr.battery_voltage_min_threshold = ZB_ZCL_POWER_CONFIG_BATTERY_VOLTAGE_MIN_THRESHOLD_DEFAULT_VALUE;
+
+	/* Illuminance measurement cluster attributes data */
+	dev_ctx.illuminance_measure_attr.measure_value 		= ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_INVALID;
+	dev_ctx.illuminance_measure_attr.min_measure_value  = ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MIN_MEASURED_VALUE_MIN_VALUE;
+	dev_ctx.illuminance_measure_attr.max_measure_value  = ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MAX_MEASURED_VALUE_MAX_VALUE;
+} 
 
 /**@brief Function to toggle the identify LED
  *
@@ -222,7 +252,7 @@ static void start_identifying(zb_bufid_t bufid)
 	    ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE) {
 		LOG_INF("Enter identify mode");
 		zb_err_code = zb_bdb_finding_binding_target(
-			SENSOR_ENDPOINT);
+			MULTI_SENSOR_ENDPOINT);
 		ZB_ERROR_CHECK(zb_err_code);
 	} else {
 		LOG_INF("Cancel identify mode");
@@ -307,10 +337,10 @@ void main(void)
 	/* Register device context (endpoints). */
 	ZB_AF_REGISTER_DEVICE_CTX(&sensor_ctx);
 
-	app_clusters_attr_init();
+	multi_sensor_clusters_attr_init();
 
 	/* Register handlers to identify notifications */
-	ZB_AF_SET_IDENTIFY_NOTIFICATION_HANDLER(SENSOR_ENDPOINT, identify_cb);
+	ZB_AF_SET_IDENTIFY_NOTIFICATION_HANDLER(MULTI_SENSOR_ENDPOINT, identify_cb);
 
 	/* Start Zigbee default thread */
 	zigbee_enable();
