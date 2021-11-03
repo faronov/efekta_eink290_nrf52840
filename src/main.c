@@ -23,8 +23,12 @@
 #include "zb_zcl_pressure_measurement_addons.h"
 #include "zb_zcl_power_config_addons.h"
 #include "zb_multi_sensor.h"
+//#include "zb_mem_config_custom.h"
+#include "multi_sensor.h"
 
-#define ZB_HA_DEFINE_DEVICE_MULTI_SENSOR
+struct k_timer my_timer;
+#define TIMER_INTERVAL_MSEC 200
+
 
 
 #define MULTI_SENSOR_ENDPOINT      		  1 /* Device endpoint, used to receive ZCL commands. */
@@ -42,6 +46,21 @@
 #define IDENTIFY_MODE_BUTTON              DK_BTN4_MSK /* Button used to enter the Identify mode. */
 #define ZB_ZCL_POWER_CONFIG_BATTERY_QUANTITY 2
 #define ZB_ZCL_POWER_CONFIG_BATTERY_RATED_VOLTAGE 15
+
+#define ZB_SED_ROLE
+
+/* Delay between startup and finding procedure. */
+#define MATCH_DESC_REQ_START_DELAY K_SECONDS(2)
+/* Timeout for finding procedure. */
+#define MATCH_DESC_REQ_TIMEOUT     K_SECONDS(5)
+/* Find only non-sleepy device. */
+#define MATCH_DESC_REQ_ROLE        ZB_NWK_BROADCAST_RX_ON_WHEN_IDLE
+/* Do not erase NVRAM to save the network parameters after device reboot or
+ * power-off. NOTE: If this option is set to ZB_TRUE then do full device erase
+ * for all network devices before running other samples.
+ */
+#define ERASE_PERSISTENT_CONFIG    ZB_FALSE
+
 
 LOG_MODULE_REGISTER(app);
 
@@ -317,6 +336,100 @@ void zboss_signal_handler(zb_bufid_t bufid)
 	}
 }
 
+static void zb_app_timer_handler()
+{
+   zb_zcl_status_t zcl_status;
+    static zb_int16_t new_temp_value, new_humm_value, new_pres_value, new_lum_value;
+    static zb_int8_t new_voltage_value;
+    
+	const struct device *bme280dev = get_bme280_device(); /* Find bme280 device */
+    sensor_sample_fetch(bme280dev);
+
+	
+    //BME280_Get_Data( resultPTH );
+    /* Get battery voltage                     */
+    //uint16_t VBAT = GetBatteryVoltage1();
+    //uint8_t batteryPercentageRemaining = battery_level_in_percent(VBAT);
+    //NRF_LOG_INFO("Battery voltage %d.", VBAT);
+    //NRF_LOG_INFO("Battery percent %d.", batteryPercentageRemaining);
+
+	/* Get new tempe measured value */
+    new_temp_value = sensor_channel_get(bme280dev, SENSOR_CHAN_AMBIENT_TEMP, &temp);
+	zcl_status = zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT, 
+                                     ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, 
+                                     ZB_ZCL_CLUSTER_SERVER_ROLE, 
+                                     ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, 
+                                     (zb_uint8_t *)&new_temp_value, 
+                                     ZB_FALSE);
+    if(zcl_status != ZB_ZCL_STATUS_SUCCESS)
+    {
+        LOG_INF("Set temperature value fail. zcl_status: %d", zcl_status);
+    }
+
+    /* Get new humm measured value */
+    new_humm_value = (zb_int16_t)(sensor_channel_get(bme280dev, SENSOR_CHAN_HUMIDITY, &humidity) / 10);
+    zcl_status = zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT,
+                                     ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, 
+                                     ZB_ZCL_CLUSTER_SERVER_ROLE, 
+                                     ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, 
+                                     (zb_uint8_t *)&new_humm_value, 
+                                     ZB_FALSE);
+    if(zcl_status != ZB_ZCL_STATUS_SUCCESS)
+    {
+        LOG_INF("Set humm value fail. zcl_status: %d", zcl_status);
+    }
+    
+    /* Get new pressure measured value */
+    new_pres_value = (zb_int16_t)(sensor_channel_get(bme280dev, SENSOR_CHAN_PRESS, &press) / 100);
+    zcl_status = zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT,
+                                     ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, 
+                                     ZB_ZCL_CLUSTER_SERVER_ROLE, 
+                                     ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_ID, 
+                                     (zb_uint8_t *)&new_pres_value, 
+                                     ZB_FALSE);
+                                         if(zcl_status != ZB_ZCL_STATUS_SUCCESS)
+    {
+        LOG_INF("Set pressure value fail. zcl_status: %d", zcl_status);
+    }
+	
+	/* Get new Illuminance measured value */
+	const struct device *max44009dev = get_max44009_device();
+		if (sensor_sample_fetch_chan(max44009dev, SENSOR_CHAN_LIGHT) != 0) {
+			printk("sensor: sample fetch fail.\n");
+			return;
+		}
+		if (sensor_channel_get(max44009dev, SENSOR_CHAN_LIGHT, &lum_val) != 0) {
+			printk("sensor: channel get fail.\n");
+			return;
+		}
+
+	new_lum_value = lum_val.val1;
+    zcl_status = zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT,
+                                     ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, 
+                                     ZB_ZCL_CLUSTER_SERVER_ROLE, 
+                                     ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID, 
+                                     (zb_uint8_t *)&new_lum_value, 
+                                     ZB_FALSE);
+                                         if(zcl_status != ZB_ZCL_STATUS_SUCCESS)
+    {
+        LOG_INF("Set illuminance value fail. zcl_status: %d", zcl_status);
+    }
+
+    /* Get new voltage measured value */
+    new_voltage_value =   (zb_int8_t)(30);
+    zb_zcl_set_attr_val(MULTI_SENSOR_ENDPOINT,
+                                     ZB_ZCL_CLUSTER_ID_POWER_CONFIG, 
+                                     ZB_ZCL_CLUSTER_SERVER_ROLE, 
+                                     ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, 
+                                     (zb_uint8_t *)&new_voltage_value, 
+                                     ZB_FALSE);
+    if(zcl_status != ZB_ZCL_STATUS_SUCCESS)
+    {
+        LOG_INF("Set voltage value fail. zcl_status: %d", zcl_status);
+    }
+}
+
+
 void error(void)
 {
 	dk_set_leds_state(DK_ALL_LEDS_MSK, DK_NO_LEDS_MSK);
@@ -337,6 +450,10 @@ void main(void)
 	/* Register device context (endpoints). */
 	ZB_AF_REGISTER_DEVICE_CTX(&sensor_ctx);
 
+
+	k_timer_init(&my_timer, zb_app_timer_handler, NULL);
+    k_timer_start(&my_timer, K_MSEC(TIMER_INTERVAL_MSEC), K_MSEC(TIMER_INTERVAL_MSEC));
+	
 	multi_sensor_clusters_attr_init();
 
 	/* Register handlers to identify notifications */
