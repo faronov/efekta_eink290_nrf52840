@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
-set(BOARD_ROOT ${CMAKE_SOURCE_DIR})
+list(APPEND BOARD_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 
 cmake_minimum_required(VERSION 3.20.0)
 
