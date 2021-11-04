@@ -23,16 +23,6 @@
 	status = "disabled";
 };
 
-&uart0 {
-	compatible = "nordic,nrf-uart";
-	status = "disabled";
-};
-
-&uart1 {
-	compatible = "nordic,nrf-uarte";
-	status = "disabled";
-};
-
 &i2c1 {
 
 	compatible = "nordic,nrf-twi";
