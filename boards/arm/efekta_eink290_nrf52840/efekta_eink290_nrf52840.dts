@@ -15,6 +15,84 @@
 	};
 };
 
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "disabled";
+};
+
+&uart0 {
+	compatible = "nordic,nrf-uart";
+	status = "disabled";
+};
+
+&uart1 {
+	compatible = "nordic,nrf-uarte";
+	status = "disabled";
+};
+
+&i2c1 {
+
+	compatible = "nordic,nrf-twi";
+	 status = "okay";
+	 sda-pin = <28>;
+	 scl-pin = <3>;
+	
+	 max44009@4a {
+	  compatible = "maxim,max44009";
+	  reg = <0x4a>;
+	  int-gpios = <&gpio0 29 0>;
+	  label = "MAX44009";
+	 };
+	bme280@77 {
+	  compatible = "bosch,bme280";
+	  reg = <0x77>;
+	  label = "BME280_I2C";
+	 };
+};
+
+&spi0 {
+	compatible = "nordic,nrf-spi";
+	/* Cannot be used together with i2c0. */
+	status = "okay"; 
+	sck-pin = <20>;
+	mosi-pin = <15>;
+	miso-pin = <21>;
+	cs-gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
+
+	ssd16xxfb@0 {
+		compatible = "solomon,ssd16xxfb", "gooddisplay,gdem029t94";
+		label = "SSD16XX";
+		spi-max-frequency = <4000000>;
+		reg = <0>;
+		width = <296>;
+		height = <128>;
+		pp-width-bits = <16>;
+		pp-height-bits = <16>;
+		dc-gpios = <&gpio0 31 GPIO_ACTIVE_LOW>;	
+		reset-gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;	
+		busy-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
+		gdv = [16];
+		sdv = [0a];
+		vcom = <0xa8>;
+		border-waveform = <0x33>;
+		softstart = [d7 d6 9d];
+		lut-initial = [
+			50 AA 55 AA 11 00 00 00
+			00 00 00 00 00 00 00 00
+			00 00 00 00 FF FF 1F 00
+			00 00 00 00 00 00
+		];
+		lut-default = [
+			10 18 18 08 18 18 08 00
+			00 00 00 00 00 00 00 00
+			00 00 00 00 13 14 44 12
+			00 00 00 00 00 00
+		];
+	};
+};
 
 &flash0 {
 	partitions {
