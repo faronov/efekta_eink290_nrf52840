@@ -59,7 +59,7 @@ int fail_counter = 0;
 static void bme280_entry_point(void *u1, void *u2, void *u3)
 {
     // Initialize BME280 Temp+Humidity sensor
-    const char *const label = DT_LABEL(DT_PATH(bosch_bme280));
+    const char *const label = DT_LABEL(DT_PATH(bme280));
     const struct device *bme280 = device_get_binding(label);
     if (!bosch_bme280)
     {

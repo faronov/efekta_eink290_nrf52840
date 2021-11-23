@@ -1,3 +1,2 @@
 
 rsource "subsys/Kconfig"
-rsource "drivers/Kconfig"

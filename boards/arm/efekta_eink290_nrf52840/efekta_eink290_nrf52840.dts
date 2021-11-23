@@ -26,21 +26,22 @@
 &i2c1 {
 
 	compatible = "nordic,nrf-twi";
-	 status = "okay";
-	 sda-pin = <28>;
-	 scl-pin = <3>;
+		status = "okay";
+		sda-pin = <28>;
+		scl-pin = <3>;
 	
-	 max44009@4a {
-	  compatible = "maxim,max44009";
-	  reg = <0x4a>;
-	  int-gpios = <&gpio0 29 0>;
-	  label = "MAX44009";
-	 };
-	bme280@77 {
-	  compatible = "bosch,bme280";
-	  reg = <0x77>;
-	  label = "BME280_I2C";
-	 };
+		max44009@4a {
+			compatible = "maxim,max44009";
+			reg = <0x4a>;
+			int-gpios = <&gpio0 29 0>;
+			label = "MAX44009";
+		};
+
+		bme280@77 {
+			compatible = "bosch,bme280";
+			reg = <0x77>;
+			label = "BME280";
+		};
 };
 
 &spi0 {
