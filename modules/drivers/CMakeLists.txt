@@ -1,0 +1,2 @@
+
+add_subdirectory_ifdef(CONFIG_UC8151_EPD display)
