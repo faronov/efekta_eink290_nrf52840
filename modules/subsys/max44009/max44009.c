@@ -52,16 +52,15 @@ K_THREAD_DEFINE(sensor_max44009, CONFIG_SUBSYS_MAX44009_STACK_SIZE,
 
 REGISTER_PUBLISHABLE_SENSOR_VALUE(luminosity, CONFIG_SUBSYS_MAX44009_CALLBACK_MAX_COUNT_AMBIENT_LIGHT);
 
-int fail_counter = 0;
+int max44009_fail_counter = 0;
 
 static void max44009_entry_point(void *u1, void *u2, void *u3)
 {
     // Initialize MAX44009 luminosity sensor
-    const char *const label = DT_LABEL(DT_PATH(max44009));
-    const struct device *max44009 = device_get_binding(label);
+    const struct device *max44009 = device_get_binding("MAX44009");
     if (!max44009)
     {
-        LOG_ERR("Failed to find sensor %s!", label);
+        LOG_ERR("Failed to find sensor %s!", "MAX44009");
         return;
     }
 
@@ -83,17 +82,17 @@ static void max44009_entry_point(void *u1, void *u2, void *u3)
             // now in an error state.
             // Don't publish it right away, because sporadic fails seem to happen
             // regularly.
-            fail_counter += 1;
-            if (fail_counter >= CONFIG_SUBSYS_MAX44009_MAX_FETCH_ATTEMPTS)
+            max44009_fail_counter += 1;
+            if (max44009_fail_counter >= CONFIG_SUBSYS_MAX44009_MAX_FETCH_ATTEMPTS)
             {
                 publish_luminosity_value(MAX44009_ERROR_VALUE);
             }
 
             continue;
         }
-        fail_counter = 0;
+        max44009_fail_counter = 0;
         
-        success = sensor_sample_fetch_chan(max44009,SENSOR_CHAN_LIGHT)
+        success = sensor_sample_fetch_chan(max44009,SENSOR_CHAN_LIGHT);
         if (success != 0)
         {
             LOG_WRN("get failed: %d", success);

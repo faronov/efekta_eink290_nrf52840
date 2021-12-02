@@ -2,3 +2,4 @@ comment "Subsystems"
 
 rsource "bme280/Kconfig"
 rsource "max44009/Kconfig"
+rsource "zigbee_device/Kconfig"

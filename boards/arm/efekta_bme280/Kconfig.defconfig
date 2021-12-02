@@ -1,0 +1,12 @@
+# Copyright (c) 2021 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_EFEKTA_BME280
+
+config BOARD
+	default "efekta_bme280"
+
+config BT_CTLR
+   default BT
+
+endif

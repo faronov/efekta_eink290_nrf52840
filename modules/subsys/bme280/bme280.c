@@ -54,16 +54,15 @@ REGISTER_PUBLISHABLE_SENSOR_VALUE(temperature, CONFIG_SUBSYS_BME280_CALLBACK_MAX
 REGISTER_PUBLISHABLE_SENSOR_VALUE(humidity, CONFIG_SUBSYS_BME280_CALLBACK_MAX_COUNT_HUMIDITY);
 REGISTER_PUBLISHABLE_SENSOR_VALUE(pressure, CONFIG_SUBSYS_BME280_CALLBACK_MAX_COUNT_PRESSURE);
 
-int fail_counter = 0;
+int bme280_fail_counter = 0;
 
 static void bme280_entry_point(void *u1, void *u2, void *u3)
 {
     // Initialize BME280 Temp+Humidity sensor
-    const char *const label = DT_LABEL(DT_PATH(bme280));
-    const struct device *bme280 = device_get_binding(label);
-    if (!bosch_bme280)
+    const struct device *bme280 = device_get_binding("BME280");
+    if (!bme280)
     {
-        LOG_ERR("Failed to find sensor %s!", label);
+        LOG_ERR("Failed to find sensor %s!", "BME280");
         return;
     }
 
@@ -87,17 +86,17 @@ static void bme280_entry_point(void *u1, void *u2, void *u3)
             // now in an error state.
             // Don't publish it right away, because sporadic fails seem to happen
             // regularly.
-            fail_counter += 1;
-            if (fail_counter >= CONFIG_SUBSYS_BME280_MAX_FETCH_ATTEMPTS)
+            bme280_fail_counter += 1;
+            if (bme280_fail_counter >= CONFIG_SUBSYS_BME280_MAX_FETCH_ATTEMPTS)
             {
                 publish_temperature_value(BME280_ERROR_VALUE);
                 publish_humidity_value(BME280_ERROR_VALUE);
-                publish_pressure_value(bme280_ERROR_VALUE);
+                publish_pressure_value(BME280_ERROR_VALUE);
             }
 
             continue;
         }
-        fail_counter = 0;
+        bme280_fail_counter = 0;
 
         success = sensor_channel_get(bme280, SENSOR_CHAN_AMBIENT_TEMP,
                                      &temperature);
